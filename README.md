@@ -1,0 +1,167 @@
+# Turnwertung – Zuschauer-Kampfgericht
+
+Live-Mitwertung für Turnwettkämpfe: Zuschauer geben per Handy ihre eigene
+Wertung ab, vergleichen sich mit dem echten Kampfgericht und sammeln Punkte
+für die Bestenliste „Bester Zuschauer-Kampfrichter“.
+
+## Technik
+
+| Baustein   | Wahl                                    | Warum                                              |
+|------------|-----------------------------------------|----------------------------------------------------|
+| Server     | FastAPI + Uvicorn                       | WebSockets nativ, ein Prozess trägt 200–300 Clients |
+| Transport  | WebSocket (`/ws`)                       | Bidirektional, Push ohne Polling                    |
+| Datenbank  | SQLite (WAL)                            | Keine Server-Installation, reicht für diese Last    |
+| Frontend   | Vanilla JS + CSS, kein Build            | Lädt auf jedem Handy sofort, nichts zu kompilieren  |
+
+Der komplette Live-Zustand liegt im Prozessspeicher und wird bei jeder Änderung
+an alle verbundenen Clients gepusht; die Datenbank ist die dauerhafte Ablage.
+
+## Start
+
+```bash
+python -m venv .venv
+.venv/Scripts/python.exe -m pip install -r requirements.txt
+```
+
+```bash
+TW_ADMIN_PASSWORD=meinpasswort .venv/Scripts/python.exe run.py
+```
+
+Dann `http://localhost:8000` öffnen.
+
+### Produktion
+
+```bash
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 1 --ws-ping-interval 20
+```
+
+**Wichtig: nur ein Worker.** Der Live-Zustand liegt im Prozessspeicher – mit
+mehreren Workern würden Clients unterschiedliche Zustände sehen.
+
+Hinter einem Reverse Proxy (nginx/Caddy) muss das WebSocket-Upgrade
+durchgereicht werden. Für nginx:
+
+```nginx
+location / {
+    proxy_pass http://127.0.0.1:8000;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "upgrade";
+    proxy_read_timeout 3600s;
+}
+```
+
+HTTPS wird empfohlen – der Client wechselt dann automatisch auf `wss://`.
+
+## Konfiguration (Umgebungsvariablen)
+
+| Variable                  | Default            | Bedeutung                                        |
+|---------------------------|--------------------|--------------------------------------------------|
+| `TW_ADMIN_PASSWORD`       | `turnen2026`       | **Vor dem Einsatz ändern.**                       |
+| `TW_SECRET_KEY`           | zufällig pro Start | Signiert das Admin-Cookie; fest setzen, damit die Anmeldung einen Neustart übersteht |
+| `TW_DB_PATH`              | `data/turnwertung.sqlite3` | Ort der Datenbank                        |
+| `TW_PORT` / `TW_HOST`     | `8000` / `0.0.0.0` | Bindung                                          |
+| `TW_DEFAULT_START_VALUE`  | `10.0`             | Vorbelegter Startwert neuer Übungen              |
+| `TW_ADMIN_SESSION_TTL`    | `43200` (12 h)     | Gültigkeit der Admin-Anmeldung in Sekunden       |
+
+## Seiten
+
+| Pfad         | Für wen        | Inhalt                                                      |
+|--------------|----------------|-------------------------------------------------------------|
+| `/`          | alle           | Landing Page mit Verlinkung                                  |
+| `/eingabe`   | Zuschauer      | Abzüge tippen, absenden, eigenes Ergebnis + Bilanz           |
+| `/dashboard` | alle           | Live-Statistik, Verteilung, Bestenliste                      |
+| `/leinwand`  | Beamer         | Dauerhafte Bestenliste, Ergebnis-Einblendung bei neuer Wertung |
+| `/admin`     | Kampfgericht   | Steuerung, passwortgeschützt                                 |
+
+## Ablauf eines Wettkampfs
+
+1. **Übung anlegen** – Gerät, Turner/in, Verein, Startwert.
+2. **▶ Gerät freigeben** – ab jetzt können Zuschauer werten.
+3. **⏹ Übungsende** – die Eingabe bleibt bewusst offen, damit Nachzügler noch
+   abgeben können.
+4. **Offizielles Ergebnis eintragen → Auswerten** – die Eingabe schließt,
+   Punkte werden vergeben, Statistik und Bestenliste erscheinen überall.
+
+Verklickt? **„Wertung zurücknehmen"** macht Schritt 4 rückgängig (Punkte werden
+entfernt, die Eingabe öffnet wieder).
+
+## Wertungsmodell
+
+Die Buttons `0,1 / 0,3 / 0,5 / 1,0` sind **Abzüge** und addieren sich; „Zurück"
+nimmt den letzten zurück:
+
+```
+Wertung des Zuschauers = Startwert − Summe der Abzüge
+```
+
+Bei Startwert `10,0` entspricht das der klassischen E-Note. Wer stattdessen
+reine Addition möchte, legt die Übung mit **Startwert 0** an – dann ist die
+Wertung schlicht die Summe der geklickten Werte.
+
+### Punkte
+
+Nach Abweichung zum offiziellen Ergebnis (in `app/config.py` anpassbar):
+
+| Abweichung | Punkte |     | Abweichung | Punkte |
+|------------|--------|-----|------------|--------|
+| ≤ 0,05     | 100    |     | ≤ 0,50     | 40     |
+| ≤ 0,10     | 85     |     | ≤ 0,80     | 25     |
+| ≤ 0,20     | 70     |     | ≤ 1,20     | 10     |
+| ≤ 0,30     | 55     |     | darüber    | 0      |
+
+Die Bestenliste sortiert nach Gesamtpunkten, bei Gleichstand nach der
+kleineren durchschnittlichen Abweichung.
+
+## Identität der Zuschauer
+
+Kein Login: Beim ersten Besuch von `/eingabe` wird ein Name abgefragt und eine
+zufällige ID im `localStorage` abgelegt. Solange dieselbe Person dasselbe Gerät
+und denselben Browser nutzt, wird sie wiedererkannt. Pro Übung zählt eine
+Wertung je Person; eine erneute Abgabe überschreibt die vorherige.
+
+## Tests
+
+```bash
+.venv/Scripts/python.exe -m pytest test_flow.py -v
+```
+
+Deckt ab: Rendern aller Seiten, Passwortschutz des Admin-Bereichs (inkl.
+Abweisen anonymer Admin-WebSockets), den kompletten Wettkampfablauf über
+WebSockets mit zwei Zuschauern, Punktevergabe und Zurücknehmen einer Wertung.
+
+## Lasttest
+
+```bash
+.venv/Scripts/python.exe loadtest.py 300 8000 <routine_id> [<admin-cookie>]
+```
+
+Simuliert N Zuschauer, die sich verbinden, fast gleichzeitig werten und auf die
+Auswertung warten. Gemessen auf einem Windows-Notebook mit 300 Zuschauern:
+
+| Kennzahl                                | Median | p95    |
+|-----------------------------------------|--------|--------|
+| Verbindungsaufbau                       | 487 ms | 573 ms |
+| Wertung bis Bestätigung                 | 2 ms   | 27 ms  |
+| Auswertung bis Ergebnis beim Zuschauer  | 118 ms | 210 ms |
+
+300 gleichzeitige Verbindungen, keine Fehler. Zwei Dinge sind dafür
+entscheidend und sollten beim Umbauen nicht verloren gehen:
+
+- **Eine einzelne Wertung löst keinen Broadcast aus.** Sonst kostet jede
+  Wertung ein personalisiertes Paket an alle – bei 300 Zuschauern also 90.000
+  Nachrichten pro Übung. Stattdessen geht nur ein gedrosseltes Zähler-Update
+  raus (`TICK_INTERVAL` in `app/hub.py`).
+- **Die Bestenliste wird einmal pro Broadcast berechnet, nicht einmal pro
+  Client** (`Hub._state_bundle`). Vor dieser Änderung dauerte eine Wertung
+  unter Last 30 Sekunden statt 2 Millisekunden.
+
+## Betriebshinweise
+
+- **Ein Prozess, ein Worker.** Für mehr Last bräuchte es einen gemeinsamen
+  Zustand (z. B. Redis Pub/Sub) – bei 300 Zuschauern nicht nötig.
+- **Reconnect** ist eingebaut: Bricht die Verbindung (Handy sperrt, WLAN
+  wackelt), verbindet der Client mit Backoff und Jitter neu; angefangene
+  Abzüge überleben im `localStorage`.
+- **Datensicherung:** Die Datei unter `data/` einfach kopieren.
+- Die Anzeige „Zuschauer online" zählt eindeutige Personen, nicht Tabs.

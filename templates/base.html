@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0b1020">
+  <title>{{ title }} · Turnwertung</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤸</text></svg>">
+</head>
+<body class="{% block bodyclass %}{% endblock %}">
+  {% block chrome %}
+  <header class="topbar">
+    <a class="brand" href="/">🤸 <span>Turnwertung</span></a>
+    <div class="topbar-right">
+      {% block topbar %}{% endblock %}
+      <span class="conn" id="conn" data-state="connecting">verbinde…</span>
+    </div>
+  </header>
+  {% endblock %}
+
+  <main class="{% block mainclass %}wrap{% endblock %}">
+    {% block content %}{% endblock %}
+  </main>
+
+  <div id="toast" class="toast" hidden></div>
+
+  <script src="/static/js/common.js"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

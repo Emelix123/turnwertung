@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block bodyclass %}dashboard{% endblock %}
+
+{% block content %}
+<section class="panel routine-head">
+  <div class="routine-meta">
+    <span class="apparatus" id="apparatus">–</span>
+    <span class="phase-pill" id="phase-pill">Warten</span>
+  </div>
+  <h1 class="athlete" id="athlete">Noch keine Übung</h1>
+  <p class="club muted" id="club"></p>
+</section>
+
+<div class="grid-2">
+  <section class="panel">
+    <h2 class="panel-title">Aktuelle Übung</h2>
+    <div class="stat-row">
+      <div class="stat"><span id="stat-count">0</span><small>Wertungen</small></div>
+      <div class="stat"><span id="stat-avg">–</span><small>Ø Publikum</small></div>
+      <div class="stat"><span id="stat-official">–</span><small>Offiziell</small></div>
+      <div class="stat"><span id="stat-online">0</span><small>Online</small></div>
+    </div>
+    <div class="histogram" id="histogram"></div>
+    <p class="muted small" id="hist-note">Die Verteilung erscheint, sobald das offizielle Ergebnis feststeht.</p>
+  </section>
+
+  <section class="panel">
+    <h2 class="panel-title">Beste Tipps dieser Übung</h2>
+    <ol class="best-list" id="best-list">
+      <li class="empty">Noch keine Auswertung.</li>
+    </ol>
+  </section>
+</div>
+
+<section class="panel">
+  <h2 class="panel-title">Bestenliste <span class="muted small">· Bester Zuschauer-Kampfrichter</span></h2>
+  <ol class="leaderboard" id="leaderboard">
+    <li class="empty">Noch keine Wertungen ausgewertet.</li>
+  </ol>
+</section>
+{% endblock %}
+
+{% block scripts %}<script src="/static/js/dashboard.js"></script>{% endblock %}

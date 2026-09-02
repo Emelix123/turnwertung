@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block bodyclass %}landing{% endblock %}
+{% block chrome %}{% endblock %}
+{% block mainclass %}wrap landing-wrap{% endblock %}
+
+{% block content %}
+<div class="hero">
+  <div class="hero-badge">🤸 Live-Wertung</div>
+  <h1>Werte mit wie ein Kampfrichter</h1>
+  <p class="lead">
+    Gib deine eigene Wertung für jede Übung ab, vergleiche dich mit dem echten
+    Kampfgericht und sammle Punkte für die Bestenliste.
+  </p>
+</div>
+
+<nav class="cards">
+  <a class="card card-primary" href="/eingabe">
+    <span class="card-icon">✍️</span>
+    <span class="card-title">Mitwerten</span>
+    <span class="card-desc">Für Zuschauer: Abzüge tippen und Wertung abgeben.</span>
+    <span class="card-cta">Jetzt starten →</span>
+  </a>
+  <a class="card" href="/dashboard">
+    <span class="card-icon">📊</span>
+    <span class="card-title">Dashboard</span>
+    <span class="card-desc">Live-Statistik, Verteilung und Bestenliste.</span>
+    <span class="card-cta">Ansehen →</span>
+  </a>
+  <a class="card" href="/leinwand">
+    <span class="card-icon">📺</span>
+    <span class="card-title">Leinwand</span>
+    <span class="card-desc">Großanzeige für Beamer und Hallenbildschirm.</span>
+    <span class="card-cta">Vollbild →</span>
+  </a>
+  <a class="card card-muted" href="/admin">
+    <span class="card-icon">🔒</span>
+    <span class="card-title">Admin</span>
+    <span class="card-desc">Wettkampf steuern. Passwortgeschützt.</span>
+    <span class="card-cta">Anmelden →</span>
+  </a>
+</nav>
+
+<footer class="landing-foot">
+  <p>Tipp: Auf dem Handy „Zum Startbildschirm hinzufügen“ – dann läuft die Eingabe wie eine App.</p>
+</footer>
+{% endblock %}

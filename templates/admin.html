@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block bodyclass %}admin{% endblock %}
+
+{% block topbar %}
+<span class="chip" id="online-chip">0 online</span>
+<form method="post" action="/admin/logout"><button class="chip" type="submit">Abmelden</button></form>
+{% endblock %}
+
+{% block content %}
+
+<!-- Steuerung ------------------------------------------------------------- -->
+<section class="panel control-panel">
+  <div class="routine-meta">
+    <span class="apparatus" id="apparatus">–</span>
+    <span class="phase-pill" id="phase-pill">Warten</span>
+  </div>
+  <h1 class="athlete" id="athlete">Keine Übung ausgewählt</h1>
+  <p class="club muted" id="club"></p>
+
+  <ol class="stepper" id="stepper">
+    <li data-step="prepared">1 · Angelegt</li>
+    <li data-step="open">2 · Freigegeben</li>
+    <li data-step="closed">3 · Übungsende</li>
+    <li data-step="scored">4 · Gewertet</li>
+  </ol>
+
+  <div class="control-stats">
+    <div class="stat"><span id="stat-count">0</span><small>Wertungen</small></div>
+    <div class="stat"><span id="stat-avg">–</span><small>Ø Publikum</small></div>
+    <div class="stat"><span id="stat-spectators">0</span><small>Zuschauer</small></div>
+  </div>
+
+  <div class="control-buttons">
+    <button class="btn btn-go" id="btn-open" type="button" disabled>▶ Gerät freigeben</button>
+    <button class="btn btn-warn" id="btn-end" type="button" disabled>⏹ Übungsende</button>
+  </div>
+
+  <div class="official-box" id="official-box">
+    <label for="official-input">Offizielles Ergebnis eintragen</label>
+    <div class="official-row">
+      <input type="number" id="official-input" step="0.05" min="0" max="30"
+             inputmode="decimal" placeholder="z. B. 12.45">
+      <button class="btn btn-primary" id="btn-official" type="button" disabled>Auswerten</button>
+    </div>
+    <p class="hint">Die Eingabe der Zuschauer bleibt bis zum Auswerten offen.</p>
+  </div>
+
+  <div class="control-buttons secondary">
+    <button class="btn btn-ghost" id="btn-reopen" type="button" hidden>↩ Wertung zurücknehmen</button>
+  </div>
+</section>
+
+<!-- Neue Übung ------------------------------------------------------------ -->
+<section class="panel">
+  <h2 class="panel-title">Neue Übung anlegen</h2>
+  <form class="form-grid" id="new-routine-form">
+    <label>
+      <span>Gerät</span>
+      <select id="f-apparatus">
+        {% for a in apparatus %}<option value="{{ a }}">{{ a }}</option>{% endfor %}
+      </select>
+    </label>
+    <label>
+      <span>Turner/in</span>
+      <input type="text" id="f-athlete" required maxlength="60" placeholder="Name">
+    </label>
+    <label>
+      <span>Verein</span>
+      <input type="text" id="f-club" maxlength="60" placeholder="optional">
+    </label>
+    <label>
+      <span>Startwert</span>
+      <input type="number" id="f-start" step="0.1" min="0" max="30"
+             value="{{ default_start_value }}">
+    </label>
+    <button class="btn btn-primary" type="submit">Anlegen &amp; auswählen</button>
+  </form>
+  <p class="hint">
+    Zuschauer klicken Abzüge (0,1 / 0,3 / 0,5 / 1,0). Die Wertung ist
+    <strong>Startwert − Summe der Abzüge</strong>. Startwert 0 ⇒ reine Addition.
+  </p>
+</section>
+
+<!-- Übungen --------------------------------------------------------------- -->
+<section class="panel">
+  <h2 class="panel-title">Übungen</h2>
+  <div class="routine-list" id="routine-list">
+    <p class="empty">Noch keine Übung angelegt.</p>
+  </div>
+</section>
+
+<!-- Wartung --------------------------------------------------------------- -->
+<section class="panel danger">
+  <h2 class="panel-title">Wartung</h2>
+  <div class="control-buttons">
+    <button class="btn btn-ghost" id="btn-reset" type="button">Wettkampf zurücksetzen</button>
+    <button class="btn btn-ghost" id="btn-reset-all" type="button">Alles löschen (inkl. Zuschauer)</button>
+  </div>
+  <p class="hint">Löscht Übungen und Wertungen. Kann nicht rückgängig gemacht werden.</p>
+</section>
+
+{% endblock %}
+
+{% block scripts %}<script src="/static/js/admin.js"></script>{% endblock %}

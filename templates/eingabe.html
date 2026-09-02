@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+{% block bodyclass %}eingabe{% endblock %}
+
+{% block topbar %}
+<button class="chip" id="btn-profile" type="button"><span id="profile-name">Gast</span></button>
+{% endblock %}
+
+{% block content %}
+
+<!-- Namensabfrage --------------------------------------------------------- -->
+<div class="modal" id="name-modal" hidden>
+  <form class="modal-box" id="name-form">
+    <h2>Wie heißt du?</h2>
+    <p class="muted">Dein Name erscheint in der Bestenliste.</p>
+    <input type="text" id="name-input" maxlength="24" required autocomplete="nickname"
+           placeholder="z. B. Lisa M." enterkeyhint="done">
+    <button class="btn btn-primary btn-block" type="submit">Los geht's</button>
+  </form>
+</div>
+
+<!-- Aktuelle Übung -------------------------------------------------------- -->
+<section class="panel routine-head">
+  <div class="routine-meta">
+    <span class="apparatus" id="apparatus">–</span>
+    <span class="phase-pill" id="phase-pill">Warten</span>
+  </div>
+  <h1 class="athlete" id="athlete">Noch keine Übung freigegeben</h1>
+  <p class="club muted" id="club"></p>
+</section>
+
+<!-- Wartezustand ---------------------------------------------------------- -->
+<section class="panel state-wait" id="view-wait">
+  <div class="waiting">
+    <div class="pulse"></div>
+    <p id="wait-text">Warte auf die Freigabe durch das Kampfgericht…</p>
+  </div>
+</section>
+
+<!-- Eingabe --------------------------------------------------------------- -->
+<section id="view-vote" hidden>
+  <div class="panel score-panel">
+    <div class="score-display">
+      <div class="score-main" id="score-value">10,0</div>
+      <div class="score-sub">
+        Abzüge gesamt <strong id="deduction-value">0,0</strong>
+        · Startwert <span id="start-value">10,0</span>
+      </div>
+    </div>
+    <div class="deduction-track" id="deduction-track"></div>
+  </div>
+
+  <div class="pad">
+    {% for step in steps %}
+    <button class="btn-pad" type="button" data-step="{{ step }}"
+            aria-label="Abzug {{ ('%.1f'|format(step))|replace('.', ',') }} hinzufügen">
+      <span class="pad-value">−{{ ('%.1f'|format(step))|replace('.', ',') }}</span>
+      <span class="pad-label">Abzug</span>
+    </button>
+    {% endfor %}
+  </div>
+
+  <div class="actions">
+    <button class="btn btn-ghost" id="btn-undo" type="button">↩ Zurück</button>
+    <button class="btn btn-primary btn-grow" id="btn-submit" type="button">Wertung absenden</button>
+  </div>
+  <p class="hint" id="vote-hint">Du kannst deine Wertung ändern, solange die Eingabe offen ist.</p>
+</section>
+
+<!-- Ergebnis -------------------------------------------------------------- -->
+<section id="view-result" hidden>
+  <div class="panel result-panel">
+    <div class="result-grid">
+      <div class="result-cell">
+        <span class="cell-label">Offiziell</span>
+        <span class="cell-value accent" id="res-official">–</span>
+      </div>
+      <div class="result-cell">
+        <span class="cell-label">Deine Wertung</span>
+        <span class="cell-value" id="res-mine">–</span>
+      </div>
+      <div class="result-cell">
+        <span class="cell-label">Abweichung</span>
+        <span class="cell-value" id="res-diff">–</span>
+      </div>
+    </div>
+    <div class="points-banner" id="points-banner">
+      <span class="points-value" id="res-points">0</span>
+      <span class="points-label">Punkte für diese Übung</span>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2 class="panel-title">Das Publikum sagt</h2>
+    <div class="stat-row">
+      <div class="stat"><span id="crowd-avg">–</span><small>Ø Publikum</small></div>
+      <div class="stat"><span id="crowd-count">–</span><small>Wertungen</small></div>
+      <div class="stat"><span id="crowd-spread">–</span><small>Streuung</small></div>
+    </div>
+    <div class="histogram" id="histogram"></div>
+  </div>
+</section>
+
+<!-- Persönliche Bilanz ---------------------------------------------------- -->
+<section class="panel">
+  <h2 class="panel-title">Deine Bilanz</h2>
+  <div class="stat-row">
+    <div class="stat"><span id="my-points">0</span><small>Punkte gesamt</small></div>
+    <div class="stat"><span id="my-rank">–</span><small>Platz</small></div>
+    <div class="stat"><span id="my-bulls">0</span><small>Volltreffer</small></div>
+  </div>
+  <a class="link-row" href="/dashboard">Komplette Bestenliste ansehen →</a>
+</section>
+
+{% endblock %}
+
+{% block scripts %}<script src="/static/js/eingabe.js"></script>{% endblock %}

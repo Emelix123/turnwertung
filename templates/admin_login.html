@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block bodyclass %}login{% endblock %}
+{% block chrome %}{% endblock %}
+{% block mainclass %}wrap login-wrap{% endblock %}
+
+{% block content %}
+<form class="panel login-box" method="post" action="/admin/login">
+  <h1>🔒 Admin</h1>
+  <p class="muted">Zugang für das Kampfgericht.</p>
+  {% if error %}<p class="error">{{ error }}</p>{% endif %}
+  <input type="password" name="password" placeholder="Passwort" required autofocus
+         autocomplete="current-password">
+  <button class="btn btn-primary btn-block" type="submit">Anmelden</button>
+  <a class="link-row" href="/">← Zurück zur Startseite</a>
+</form>
+{% endblock %}

@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block bodyclass %}leinwand{% endblock %}
+{% block chrome %}{% endblock %}
+{% block mainclass %}screen{% endblock %}
+
+{% block content %}
+<div class="screen-head">
+  <div class="screen-brand">🤸 Zuschauer-Kampfgericht</div>
+  <div class="screen-status">
+    <span class="screen-phase" id="phase-pill">Warten</span>
+    <span class="conn" id="conn" data-state="connecting">verbinde…</span>
+    <button class="chip" id="btn-fullscreen" type="button">⛶</button>
+  </div>
+</div>
+
+<div class="screen-body">
+  <!-- Bestenliste (Dauerzustand) -->
+  <section class="screen-board">
+    <h2>Bestenliste</h2>
+    <ol class="big-board" id="leaderboard">
+      <li class="empty">Noch keine Wertungen.</li>
+    </ol>
+  </section>
+
+  <!-- Aktuelle Übung -->
+  <aside class="screen-side">
+    <div class="side-card">
+      <span class="side-label" id="apparatus">Gerät</span>
+      <h3 id="athlete">Keine Übung</h3>
+      <p class="muted" id="club"></p>
+      <div class="live-count">
+        <span id="stat-count">0</span>
+        <small>Wertungen abgegeben</small>
+      </div>
+      <div class="live-count subtle">
+        <span id="stat-online">0</span>
+        <small>Zuschauer online</small>
+      </div>
+    </div>
+    <div class="side-card qr-card">
+      <span class="side-label">Mitmachen</span>
+      <p class="join-url" id="join-url">…/eingabe</p>
+      <p class="muted small">Handy-Browser öffnen und mitwerten.</p>
+    </div>
+  </aside>
+</div>
+
+<!-- Ergebnis-Einblendung -->
+<div class="takeover" id="takeover" hidden>
+  <div class="takeover-inner">
+    <div class="takeover-label" id="to-apparatus">Boden</div>
+    <h2 class="takeover-athlete" id="to-athlete">–</h2>
+    <div class="takeover-scores">
+      <div class="to-cell">
+        <span class="to-label">Offizielle Wertung</span>
+        <span class="to-value accent" id="to-official">–</span>
+      </div>
+      <div class="to-cell">
+        <span class="to-label">Ø Publikum</span>
+        <span class="to-value" id="to-crowd">–</span>
+      </div>
+      <div class="to-cell">
+        <span class="to-label">Abweichung</span>
+        <span class="to-value" id="to-diff">–</span>
+      </div>
+    </div>
+    <div class="takeover-hist" id="to-hist"></div>
+    <div class="takeover-best">
+      <span class="to-label">Beste Tipps</span>
+      <ol id="to-best"></ol>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}<script src="/static/js/leinwand.js"></script>{% endblock %}

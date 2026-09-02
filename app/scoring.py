@@ -6,6 +6,17 @@ from statistics import mean, median, pstdev
 from .config import POINT_TIERS
 
 
+def score_from(start_value: float, deduction: float) -> float:
+    """Wertung eines Zuschauers aus Startwert und Summe der Abzuege.
+
+    Startwert 0 (Standard) = reine E-Wertung: die Abzuege werden schlicht
+    aufaddiert. Startwert > 0 = Notenmodus: es wird davon abgezogen.
+    """
+    if start_value <= 0:
+        return round(deduction, 2)
+    return round(start_value - deduction, 2)
+
+
 def points_for_diff(diff: float) -> int:
     """Punkte fuer die Abweichung vom offiziellen Ergebnis."""
     for max_diff, points in POINT_TIERS:

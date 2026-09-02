@@ -25,6 +25,11 @@
 
 * { box-sizing: border-box; }
 
+/* Muss vor allen Layout-Regeln stehen: eigene display-Werte (z. B.
+   .modal { display: flex }) schlagen sonst das hidden-Attribut, das Overlay
+   bleibt sichtbar und faengt als position:fixed saemtliche Klicks ab. */
+[hidden] { display: none !important; }
+
 html, body {
   margin: 0;
   padding: 0;

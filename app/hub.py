@@ -265,7 +265,7 @@ class Hub:
             return {"type": "error", "message": "Die Wertung ist geschlossen."}
 
         deduction = max(0.0, round(float(deduction), 2))
-        score = round(routine["start_value"] - deduction, 2)
+        score = scoring.score_from(routine["start_value"], deduction)
 
         async with self._lock:
             db.save_vote(routine_id, client.spectator_id, deduction, score)

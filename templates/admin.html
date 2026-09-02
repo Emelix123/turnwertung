@@ -36,13 +36,16 @@
   </div>
 
   <div class="official-box" id="official-box">
-    <label for="official-input">Offizielles Ergebnis eintragen</label>
+    <label for="official-input" id="official-label">Offizielle E-Wertung eintragen</label>
     <div class="official-row">
       <input type="number" id="official-input" step="0.05" min="0" max="30"
-             inputmode="decimal" placeholder="z. B. 12.45">
+             inputmode="decimal" placeholder="z. B. 1.85">
       <button class="btn btn-primary" id="btn-official" type="button" disabled>Auswerten</button>
     </div>
-    <p class="hint">Die Eingabe der Zuschauer bleibt bis zum Auswerten offen.</p>
+    <p class="hint" id="official-hint">
+      Summe der Abzüge des Kampfgerichts. Die Eingabe der Zuschauer bleibt bis
+      zum Auswerten offen.
+    </p>
   </div>
 
   <div class="control-buttons secondary">
@@ -76,8 +79,10 @@
     <button class="btn btn-primary" type="submit">Anlegen &amp; auswählen</button>
   </form>
   <p class="hint">
-    Zuschauer klicken Abzüge (0,1 / 0,3 / 0,5 / 1,0). Die Wertung ist
-    <strong>Startwert − Summe der Abzüge</strong>. Startwert 0 ⇒ reine Addition.
+    Zuschauer klicken Abzüge (0,1 / 0,3 / 0,5 / 1,0).
+    <strong>Startwert 0</strong> (Standard): die Wertung ist die Summe der Abzüge –
+    reine E-Wertung. <strong>Startwert &gt; 0</strong> (z. B. 10,0): die Wertung ist
+    Startwert minus Abzüge, also die fertige Note.
   </p>
 </section>
 

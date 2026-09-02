@@ -26,8 +26,10 @@ ADMIN_COOKIE = "tw_admin"
 # Abzugs-Buttons fuer die Zuschauer.
 DEDUCTION_STEPS = [0.1, 0.3, 0.5, 1.0]
 
-# Default-Startwert einer Uebung (E-Note startet bei 10,0).
-DEFAULT_START_VALUE = float(os.environ.get("TW_DEFAULT_START_VALUE", 10.0))
+# Startwert einer Uebung.
+#   0    -> reine E-Wertung: die Wertung ist die Summe der Abzuege (Standard).
+#   > 0  -> Notenmodus: die Wertung ist Startwert minus Summe der Abzuege.
+DEFAULT_START_VALUE = float(os.environ.get("TW_DEFAULT_START_VALUE", 0.0))
 
 APPARATUS = [
     "Boden",

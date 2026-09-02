@@ -108,6 +108,15 @@
     $("#stat-count").textContent = state.vote_count || 0;
     $("#stat-avg").textContent = state.stats ? num(state.stats.average, 2) : "–";
 
+    // Beschriftung an den Wertungsmodus der Übung anpassen.
+    const deductionMode = !r || r.start_value <= 0;
+    $("#official-label").textContent = deductionMode
+      ? "Offizielle E-Wertung eintragen"
+      : "Offizielle Endnote eintragen";
+    $("#official-hint").textContent = deductionMode
+      ? "Summe der Abzüge des Kampfgerichts. Die Eingabe der Zuschauer bleibt bis zum Auswerten offen."
+      : `Endnote des Kampfgerichts (Startwert ${num(r.start_value, 1)}). Die Eingabe der Zuschauer bleibt bis zum Auswerten offen.`;
+
     $("#btn-open").disabled = !r || phase === "open";
     $("#btn-end").disabled = !r || phase !== "open";
     $("#btn-official").disabled = !r || !(phase === "open" || phase === "closed");

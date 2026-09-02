@@ -5,3 +5,7 @@ data/
 *.sqlite3*
 server.log
 .pytest_cache/
+start.txt
+start.ps1
+start.bat
+*.local.*

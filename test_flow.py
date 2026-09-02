@@ -172,6 +172,52 @@ def test_full_competition_flow(client):
             assert state["leaderboard"] == []
 
 
+def test_score_modes():
+    # Standard: Startwert 0 -> die Abzuege sind die Wertung (reine E-Wertung)
+    assert scoring.score_from(0, 1.4) == 1.4
+    assert scoring.score_from(0, 0.0) == 0.0
+    # Notenmodus: Startwert > 0 -> davon wird abgezogen
+    assert scoring.score_from(10.0, 1.4) == 8.6
+    assert scoring.score_from(13.5, 0.75) == 12.75
+
+
+def test_deduction_mode_end_to_end(client):
+    """Kompletter Ablauf im Standardmodus (Startwert 0)."""
+    client.post("/admin/login", data={"password": "geheim123"}, follow_redirects=False)
+
+    with client.websocket_connect("/ws?role=admin") as admin:
+        drain(admin)
+        admin.send_json({
+            "type": "admin", "action": "create_routine",
+            "apparatus": "Boden", "athlete": "E-Wertung Test", "club": "",
+            "start_value": 0,
+        })
+        routine_id = wait_state(admin, phase="prepared")["routine"]["id"]
+
+        with client.websocket_connect("/ws?role=eingabe") as viewer:
+            drain(viewer)
+            viewer.send_json({"type": "hello", "spectator_id": "e-1", "name": "Emil"})
+            drain(viewer)
+
+            admin.send_json({"type": "admin", "action": "open_routine", "routine_id": routine_id})
+            wait_state(admin, phase="open")
+
+            # Abzuege 0.5 + 0.3 = 0.8 -> Wertung 0.8, nicht 9.2
+            viewer.send_json({"type": "vote", "routine_id": routine_id, "deduction": 0.8})
+            assert drain(viewer, "vote_ok")["score"] == 0.8
+
+            admin.send_json({
+                "type": "admin", "action": "set_official",
+                "routine_id": routine_id, "official": 0.75,
+            })
+            state = wait_state(admin, phase="scored")
+            assert state["stats"]["average"] == 0.8
+            personal = wait_state(viewer, phase="scored")["personal"]["vote"]
+            assert personal["score"] == 0.8
+            assert personal["diff"] == 0.05
+            assert personal["points"] == 100      # innerhalb 0,05
+
+
 def test_scoring_tiers():
     assert scoring.points_for_diff(0.0) == 100
     assert scoring.points_for_diff(0.05) == 100

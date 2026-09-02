@@ -61,7 +61,7 @@ HTTPS wird empfohlen – der Client wechselt dann automatisch auf `wss://`.
 | `TW_SECRET_KEY`           | zufällig pro Start | Signiert das Admin-Cookie; fest setzen, damit die Anmeldung einen Neustart übersteht |
 | `TW_DB_PATH`              | `data/turnwertung.sqlite3` | Ort der Datenbank                        |
 | `TW_PORT` / `TW_HOST`     | `8000` / `0.0.0.0` | Bindung                                          |
-| `TW_DEFAULT_START_VALUE`  | `10.0`             | Vorbelegter Startwert neuer Übungen              |
+| `TW_DEFAULT_START_VALUE`  | `0.0`              | Startwert neuer Übungen; `0` = reine E-Wertung, `10.0` = Notenmodus |
 | `TW_ADMIN_SESSION_TTL`    | `43200` (12 h)     | Gültigkeit der Admin-Anmeldung in Sekunden       |
 
 ## Seiten
@@ -89,15 +89,18 @@ entfernt, die Eingabe öffnet wieder).
 ## Wertungsmodell
 
 Die Buttons `0,1 / 0,3 / 0,5 / 1,0` sind **Abzüge** und addieren sich; „Zurück"
-nimmt den letzten zurück:
+nimmt den letzten zurück. Welche Zahl daraus wird, hängt am **Startwert** der
+Übung:
 
-```
-Wertung des Zuschauers = Startwert − Summe der Abzüge
-```
+| Startwert | Wertung | Wofür |
+|---|---|---|
+| **0** (Standard) | Summe der Abzüge | Reine E-Wertung – es wird nicht von 10 heruntergezählt. Der Admin trägt ebenfalls die offizielle Abzugssumme ein. |
+| **> 0** (z. B. 10,0) | Startwert − Abzüge | Fertige Note. Der Admin trägt die offizielle Endnote ein. |
 
-Bei Startwert `10,0` entspricht das der klassischen E-Note. Wer stattdessen
-reine Addition möchte, legt die Übung mit **Startwert 0** an – dann ist die
-Wertung schlicht die Summe der geklickten Werte.
+Der Standard ist per `TW_DEFAULT_START_VALUE` global umstellbar und lässt sich
+beim Anlegen jeder Übung einzeln überschreiben. Die Oberfläche passt sich an:
+im E-Wertungs-Modus zeigt die große Zahl direkt die Abzugssumme, im Notenmodus
+die Note samt Startwert.
 
 ### Punkte
 

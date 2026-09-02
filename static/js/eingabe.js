@@ -46,11 +46,14 @@
   // ---------------------------------------------------------------- Rendering
 
   function renderScore(bump = false) {
-    const start = state && state.routine ? state.routine.start_value : 10;
+    const start = state && state.routine ? state.routine.start_value : 0;
     const deduction = total();
-    const score = Math.round((start - deduction) * 100) / 100;
+    // Startwert 0 = reine E-Wertung: die Abzüge sind die Wertung.
+    const score = start > 0 ? Math.round((start - deduction) * 100) / 100 : deduction;
 
     $("#score-value").textContent = num(score, 2);
+    $("#score-note").hidden = start <= 0;
+    $("#score-plain").hidden = start > 0;
     $("#deduction-value").textContent = num(deduction, 2);
     $("#start-value").textContent = num(start, 1);
 

@@ -1,3 +1,10 @@
+# start
+sudo apt update && sudo apt install -y git
+git clone https://github.com/Emelix123/turnwertung.git
+cd turnwertung
+git checkout claude/ubuntu-vm-ngrok-autostart-6xdaco
+sudo ./deploy/install.sh
+
 # Turnwertung – Zuschauer-Kampfgericht
 
 Live-Mitwertung für Turnwettkämpfe: Zuschauer geben per Handy ihre eigene

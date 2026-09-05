@@ -1,0 +1,31 @@
+# Turnwertung-Server. Ein Prozess, ein Worker - der Live-Zustand liegt im
+# Prozessspeicher, mehrere Worker wuerden Clients verschiedene Zustaende zeigen.
+[Unit]
+Description=Turnwertung (FastAPI/Uvicorn)
+Documentation=https://github.com/Emelix123/turnwertung
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=turnwertung
+Group=turnwertung
+WorkingDirectory=/opt/turnwertung
+EnvironmentFile=/etc/turnwertung/turnwertung.env
+ExecStart=/opt/turnwertung/.venv/bin/python run.py
+Restart=always
+RestartSec=3
+
+# 300 Zuschauer belegen ~320 Dateideskriptoren; der Default von 1024 waere
+# knapp bei Reconnect-Wellen (siehe README, Abschnitt VM-Dimensionierung).
+LimitNOFILE=65535
+
+# Absicherung: nur das Datenverzeichnis ist beschreibbar.
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/turnwertung
+
+[Install]
+WantedBy=multi-user.target

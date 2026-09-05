@@ -1,0 +1,29 @@
+# ngrok-Tunnel. Ersetzt die manuellen Schritte
+#   ngrok config add-authtoken ...   -> steht in /etc/turnwertung/ngrok.yml
+#   ngrok http 8000                  -> der Tunnel "turnwertung" in derselben Datei
+[Unit]
+Description=ngrok-Tunnel fuer Turnwertung
+Documentation=https://ngrok.com/docs/agent/config/
+After=network-online.target turnwertung.service
+Wants=network-online.target turnwertung.service
+
+[Service]
+Type=simple
+User=turnwertung
+Group=turnwertung
+WorkingDirectory=/var/lib/turnwertung
+Environment=HOME=/var/lib/turnwertung
+ExecStart=/usr/local/bin/ngrok start --all \
+    --config /etc/turnwertung/ngrok.yml \
+    --log stdout --log-format logfmt --log-level info
+Restart=always
+RestartSec=5
+
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/turnwertung
+
+[Install]
+WantedBy=multi-user.target

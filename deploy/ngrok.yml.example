@@ -1,0 +1,21 @@
+# Wird nach /etc/turnwertung/ngrok.yml kopiert (Rechte 0640, root:turnwertung).
+# Config-Version 2 - wird von jedem ngrok-3-Agent gelesen.
+version: "2"
+
+# Ersetzt "ngrok config add-authtoken ...".
+# Token: https://dashboard.ngrok.com/get-started/your-authtoken
+authtoken: HIER_DEIN_NGROK_AUTHTOKEN
+
+# Lokale Web-Oberflaeche/API des Agents - "tw-url" liest von hier die
+# oeffentliche Adresse. Nicht abschalten.
+web_addr: 127.0.0.1:4040
+
+tunnels:
+  # Entspricht "ngrok http 8000".
+  turnwertung:
+    proto: http
+    addr: 8000
+    # Ohne feste Domain bekommt der Tunnel bei jedem Start eine neue Adresse.
+    # Im ngrok-Dashboard gibt es (auch im Gratis-Tarif) eine feste Domain -
+    # dann hier eintragen und die Zeile einkommentieren:
+    # domain: dein-name.ngrok-free.app

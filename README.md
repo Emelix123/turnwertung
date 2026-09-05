@@ -53,6 +53,22 @@ location / {
 
 HTTPS wird empfohlen – der Client wechselt dann automatisch auf `wss://`.
 
+### Ubuntu-VM mit Autostart und ngrok
+
+Auf einer VM laufen Server und Tunnel als systemd-Dienste und starten beim
+Hochfahren von selbst:
+
+```bash
+git clone https://github.com/Emelix123/turnwertung.git
+cd turnwertung
+sudo ./deploy/install.sh     # fragt nach Admin-Passwort und ngrok-Authtoken
+tw-url                       # oeffentliche Adresse anzeigen
+```
+
+Kein Reverse Proxy, keine Portfreigabe – ngrok baut die Verbindung von innen
+nach außen auf und terminiert TLS. Details, Bedienung und Fehlersuche:
+[`deploy/README.md`](deploy/README.md).
+
 ## Konfiguration (Umgebungsvariablen)
 
 | Variable                  | Default            | Bedeutung                                        |

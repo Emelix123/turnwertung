@@ -1,0 +1,54 @@
+#!/usr/bin/env python3
+"""Zeigt die oeffentliche ngrok-Adresse des laufenden Tunnels.
+
+Wird nach /usr/local/bin/tw-url installiert. Aufruf:  tw-url
+Der ngrok-Agent fuehrt lokal eine kleine API auf 127.0.0.1:4040; von dort
+kommt die Adresse, ohne dass man ins Dashboard schauen muss.
+"""
+from __future__ import annotations
+
+import json
+import sys
+import time
+import urllib.error
+import urllib.request
+
+API = "http://127.0.0.1:4040/api/tunnels"
+# Nach einem Neustart braucht der Agent ein paar Sekunden bis zum Tunnel.
+DEADLINE = 20.0
+
+
+def fetch() -> list[dict]:
+    with urllib.request.urlopen(API, timeout=2) as response:
+        return json.load(response).get("tunnels", [])
+
+
+def main() -> int:
+    ende = time.monotonic() + DEADLINE
+    letzter_fehler = "keine Antwort"
+    while time.monotonic() < ende:
+        try:
+            tunnels = fetch()
+        except (urllib.error.URLError, OSError, json.JSONDecodeError) as fehler:
+            letzter_fehler = str(fehler)
+            tunnels = []
+        # Bei https und http auf denselben Port gewinnt https.
+        for wunsch in ("https", "http"):
+            for tunnel in tunnels:
+                url = tunnel.get("public_url", "")
+                if url.startswith(wunsch + ":"):
+                    print(url)
+                    print(f"{url}/eingabe   (Zuschauer)")
+                    print(f"{url}/admin     (Kampfgericht)")
+                    print(f"{url}/leinwand  (Beamer)")
+                    return 0
+        time.sleep(1)
+
+    print(f"Kein Tunnel gefunden ({letzter_fehler}).", file=sys.stderr)
+    print("Laeuft der Agent?  sudo systemctl status ngrok", file=sys.stderr)
+    print("Logs:              sudo journalctl -u ngrok -n 50", file=sys.stderr)
+    return 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

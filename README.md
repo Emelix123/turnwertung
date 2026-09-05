@@ -158,6 +158,51 @@ entscheidend und sollten beim Umbauen nicht verloren gehen:
 - **Die Bestenliste wird einmal pro Broadcast berechnet, nicht einmal pro
   Client** (`Hub._state_bundle`). Vor dieser Änderung dauerte eine Wertung
   unter Last 30 Sekunden statt 2 Millisekunden.
+- **`db.leaderboard()` ist gecacht** und wird nur verworfen, wenn sich
+  `votes` oder `spectators` ändern. Das Aggregat läuft über alle Wertungen des
+  Tages und wird dadurch länger (0,9 ms bei 300, 12 ms bei 18.000 Wertungen);
+  jeder neu verbundene Client zahlt es sonst selbst. Wer eine Schreiboperation
+  ergänzt, muss `db.invalidate_board()` aufrufen — `test_flow.py` prüft das.
+
+## VM-Dimensionierung
+
+Gemessen auf einer Linux-VM (4 vCPU Xeon 2,8 GHz), 300 echte WebSocket-Clients,
+40 Übungen am Stück, ein uvicorn-Worker:
+
+| Größe                                   | Messwert                          |
+|-----------------------------------------|-----------------------------------|
+| RSS leerer Server                       | 50 MiB                            |
+| RSS mit 300 Verbindungen, eingeschwungen | **128 MiB** (≈ 0,27 MiB/Client)  |
+| CPU Wertphase (300 Wertungen in 1,5 s)  | 0,13–0,19 s                       |
+| CPU Auswertung (Broadcast an 300)       | 0,08–0,16 s                       |
+| Ergebnis beim Zuschauer                 | median 110 ms, p95 130 ms         |
+| Voller Zustand pro Nachricht            | 6,4 kB roh → **0,9 kB** komprimiert |
+| Erstaufruf `/eingabe`                   | **12,1 kB** (mit gzip)            |
+| Datenbank bei 18.000 Wertungen          | 2,0 MB                            |
+
+Daraus: **2 vCPU, 2 GB RAM, 20 GB SSD** reichen für 300 Zuschauer mit Reserve
+(bei 600 Clients gegengetestet: 204 MiB RSS, CPU wächst linear). Mehr Kerne
+helfen der App nicht — es ist ein Prozess auf einem Kern; ein schneller Kern
+ist mehr wert als viele langsame.
+
+Netzlast: rund 0,5 Mbit/s Dauerlast während der Wertphase, kurze Spitzen von
+~20 Mbit/s beim Auswerten, plus 12 kB pro Zuschauer beim ersten Seitenaufruf.
+Eine 50-Mbit/s-Anbindung ist reichlich; der Engpass ist das Hallen-WLAN.
+
+Zwei Systemeinstellungen, die bei 300 Zuschauern noch nicht nötig sind, aber
+die Reserve kosten, wenn sie fehlen — 300 Clients belegen 319 Dateideskriptoren
+im App-Prozess und je zwei Verbindungen im Reverse Proxy:
+
+```ini
+# /etc/systemd/system/turnwertung.service   (Default ist 1024)
+[Service]
+LimitNOFILE=65535
+```
+
+```nginx
+# /etc/nginx/nginx.conf   (Ubuntu-Default ist 768)
+events { worker_connections 4096; }
+```
 
 ## Betriebshinweise
 

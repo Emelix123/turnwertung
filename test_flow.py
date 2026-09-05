@@ -230,3 +230,73 @@ def test_histogram_buckets():
     buckets = scoring.histogram([9.0, 9.1, 9.6, 10.0])
     assert sum(b["count"] for b in buckets) == 4
     assert buckets[0]["count"] > 0 and buckets[-1]["count"] > 0
+
+
+def test_leaderboard_cache_invalidation(client):
+    """Der Bestenlisten-Cache muss bei jeder Aenderung an votes/spectators fallen.
+
+    Ohne Invalidierung liefert db.leaderboard() veraltete Punktstaende - der
+    Fehler faellt im Betrieb erst auf, wenn die Leinwand die falsche
+    Bestenliste zeigt.
+    """
+    routine = db.create_routine("Boden", "Mia", "TV Test", 0.0)
+    db.upsert_spectator("s1", "Mia-Fan")
+
+    # Frisch: noch keine gewertete Uebung -> leer
+    assert db.leaderboard() == []
+
+    # Wertung speichern (noch ohne Punkte) -> weiterhin leer, aber neu berechnet
+    db.save_vote(routine["id"], "s1", 0.8, 0.8)
+    assert db.leaderboard() == []
+
+    # Punkte vergeben -> muss sofort sichtbar sein
+    vote = db.vote_of(routine["id"], "s1")
+    db.apply_scores([(0.0, 100, vote["id"])])
+    board = db.leaderboard()
+    assert [(e["name"], e["total_points"]) for e in board] == [("Mia-Fan", 100)]
+
+    # Namensaenderung -> muss sofort sichtbar sein
+    db.upsert_spectator("s1", "Mia-Superfan")
+    assert db.leaderboard()[0]["name"] == "Mia-Superfan"
+
+    # Gleicher Name erneut (Reconnect) -> Inhalt unveraendert
+    db.upsert_spectator("s1", "Mia-Superfan")
+    assert db.leaderboard()[0]["name"] == "Mia-Superfan"
+
+    # Zuruecknehmen -> Punkte weg
+    db.apply_scores([(None, None, vote["id"])])
+    assert db.leaderboard() == []
+
+    # Punkte zurueck, dann Uebung loeschen -> Bestenliste wieder leer
+    db.apply_scores([(0.0, 100, vote["id"])])
+    assert len(db.leaderboard()) == 1
+    db.delete_routine(routine["id"])
+    assert db.leaderboard() == []
+
+
+def test_leaderboard_limit_and_ranks(client):
+    """Der Cache haelt die volle Liste; limit schneidet nur ab."""
+    routine = db.create_routine("Reck", "Tim", "TV Test", 0.0)
+    for i in range(5):
+        db.upsert_spectator(f"c{i}", f"Zuschauer {i}")
+        db.save_vote(routine["id"], f"c{i}", 0.5, 0.5)
+    votes = db.votes_for_routine(routine["id"])
+    # absteigende Punkte, damit die Reihenfolge eindeutig ist
+    db.apply_scores([(0.0, 100 - i * 10, v["id"]) for i, v in enumerate(votes)])
+
+    full = db.leaderboard(limit=100000)
+    assert len(full) == 5
+    assert [e["rank"] for e in full] == [1, 2, 3, 4, 5]
+    assert full[0]["total_points"] > full[-1]["total_points"]
+
+    top2 = db.leaderboard(limit=2)
+    assert [e["id"] for e in top2] == [e["id"] for e in full[:2]]
+    assert [e["rank"] for e in top2] == [1, 2]
+
+
+def test_static_assets_are_compressed(client):
+    """Der Erstaufruf muss komprimiert ausgeliefert werden."""
+    for path in ("/eingabe", "/static/css/style.css", "/static/js/eingabe.js"):
+        r = client.get(path, headers={"Accept-Encoding": "gzip"})
+        assert r.status_code == 200
+        assert r.headers.get("content-encoding") == "gzip", path
